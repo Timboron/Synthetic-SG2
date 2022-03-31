@@ -266,7 +266,9 @@ def training_loop(
             all_gen_z = [phase_gen_z.split(batch_gpu) for phase_gen_z in all_gen_z.split(batch_size)]
             all_gen_c = [training_set.get_label(np.random.randint(len(training_set))) for _ in range(len(phases) * batch_size)]
             all_gen_c = torch.from_numpy(np.stack(all_gen_c)).pin_memory().to(device)
+            print("shape of genlabel", all_gen_c.shape)
             all_gen_c = [phase_gen_c.split(batch_gpu) for phase_gen_c in all_gen_c.split(batch_size)]
+
 
         # Execute training phases.
         for phase, phase_gen_z, phase_gen_c in zip(phases, all_gen_z, all_gen_c):
