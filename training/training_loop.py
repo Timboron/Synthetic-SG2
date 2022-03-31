@@ -229,9 +229,21 @@ def training_loop(
         # images = torch.cat([G_ema(z=z, c=c, noise_mode='const').cpu() for z, c in zip(grid_z, grid_c)]).numpy()
         # save_image_grid(images, os.path.join(run_dir, 'fakes_init.png'), drange=[-1,1], grid_size=grid_size)
 
-        grid_size, images, labels = setup_snapshot_image_grid(training_set=training_set)
-        print("snapshot label shape", labels.shape)
+        grid_size, _, labels = setup_snapshot_image_grid(training_set=training_set)
+        print("grid size")
+        print("old snapshot label shape", labels.shape)
         print("snapshot label", labels)
+        labels = []
+        for i in range(0, 1024):
+            label = np.random.randint(10572, 10672)
+            onehot = np.zeros(10672, dtype=np.float32)
+            onehot[label] = 1
+            label = onehot
+            labels.append(label)
+        labels = np.stack(labels)
+        print("old snapshot label shape", labels.shape)
+        print("snapshot label", labels)
+
         grid_z = torch.randn([labels.shape[0], G.z_dim], device=device).split(batch_gpu)
         grid_c = torch.from_numpy(labels).to(device).split(batch_gpu)
         images = torch.cat([G_ema(z=z, c=c, noise_mode='const').cpu() for z, c in zip(grid_z, grid_c)]).numpy()
@@ -265,7 +277,6 @@ def training_loop(
     if progress_fn is not None:
         progress_fn(0, total_kimg)
     while True:
-        print("detected identities for label generation", len(training_set))
 
         # Fetch training data.
         with torch.autograd.profiler.record_function('data_fetch'):
@@ -276,16 +287,13 @@ def training_loop(
             all_gen_z = [phase_gen_z.split(batch_gpu) for phase_gen_z in all_gen_z.split(batch_size)]
 
             # old
-            all_gen_c = [training_set.get_label(np.random.randint(len(training_set))) for _ in range(len(phases) * batch_size)]
-            all_gen_c = torch.from_numpy(np.stack(all_gen_c)).pin_memory().to(device)
-            print("shape old labelcollection", all_gen_c.shape)
-            all_gen_c = [phase_gen_c.split(batch_gpu) for phase_gen_c in all_gen_c.split(batch_size)]
-
+            # all_gen_c = [training_set.get_label(np.random.randint(len(training_set))) for _ in range(len(phases) * batch_size)]
+            # all_gen_c = torch.from_numpy(np.stack(all_gen_c)).pin_memory().to(device)
+            # all_gen_c = [phase_gen_c.split(batch_gpu) for phase_gen_c in all_gen_c.split(batch_size)]
 
             # new
             all_gen_c = [training_set.get_syn_label() for _ in range(len(phases) * batch_size)]
             all_gen_c = torch.from_numpy(np.stack(all_gen_c)).pin_memory().to(device)
-            print("shape new labelcollection", all_gen_c.shape)
             all_gen_c = [phase_gen_c.split(batch_gpu) for phase_gen_c in all_gen_c.split(batch_size)]
 
         # Execute training phases.
