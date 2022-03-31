@@ -94,7 +94,6 @@ class Dataset(torch.utils.data.Dataset):
 
     def get_label(self, idx):
         label = self._get_raw_labels()[self._raw_idx[idx]]
-        print("oldlabel", label)
         if label.dtype == np.int64:
             onehot = np.zeros(self.label_shape, dtype=np.float32)
             onehot[label] = 1
@@ -103,7 +102,6 @@ class Dataset(torch.utils.data.Dataset):
 
     def get_syn_label(self):
         label = np.random.randint(10572, 10672)
-        print("newlabel", label)
         onehot = np.zeros(self.label_shape, dtype=np.float32)
         onehot[label] = 1
         label = onehot
