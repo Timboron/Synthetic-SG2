@@ -101,11 +101,17 @@ class Dataset(torch.utils.data.Dataset):
         return label.copy()
 
     # new
-    def get_syn_label(self):
-        label = np.random.randint(10572, 10672)
-        onehot = np.zeros(self.label_shape, dtype=np.float32)
-        onehot[label] = 1
-        label = onehot
+    def get_syn_label(self, gen=False):
+        if gen:
+            label = np.random.randint(0, 100)
+            onehot = np.zeros(100, dtype=np.float32)
+            onehot[label] = 1
+            label = onehot
+        else:
+            label = np.random.randint(10572, 10672)
+            onehot = np.zeros(self.label_shape, dtype=np.float32)
+            onehot[label] = 1
+            label = onehot
         return label.copy()
 
     def get_details(self, idx):
