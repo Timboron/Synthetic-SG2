@@ -191,7 +191,7 @@ class MappingNetwork(torch.nn.Module):
         self.num_ws = num_ws
         self.num_layers = num_layers
         self.w_avg_beta = w_avg_beta
-
+        print("mappingnetwork c_dim", self.c_dim)
         if embed_features is None:
             embed_features = w_dim
         if c_dim == 0:
