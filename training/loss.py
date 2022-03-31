@@ -61,8 +61,6 @@ class StyleGAN2Loss(Loss):
         do_Gpl   = (phase in ['Greg', 'Gboth']) and (self.pl_weight != 0)
         do_Dr1   = (phase in ['Dreg', 'Dboth']) and (self.r1_gamma != 0)
 
-        print("gen_c_g", gen_c_g.shape, "gen_c_d", gen_c_d.shape)
-
         # Gmain: Maximize logits for generated images.
         if do_Gmain:
             with torch.autograd.profiler.record_function('Gmain_forward'):
