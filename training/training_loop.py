@@ -146,10 +146,11 @@ def training_loop(
     # Construct networks.
     if rank == 0:
         print('Constructing networks...')
-    print("label dim for network construction", training_set.label_dim)
-    common_kwargs = dict(c_dim=training_set.label_dim, img_resolution=training_set.resolution, img_channels=training_set.num_channels)
-    G = dnnlib.util.construct_class_by_name(**G_kwargs, **common_kwargs).train().requires_grad_(False).to(device) # subclass of torch.nn.Module
-    D = dnnlib.util.construct_class_by_name(**D_kwargs, **common_kwargs).train().requires_grad_(False).to(device) # subclass of torch.nn.Module
+    # common_kwargs = dict(c_dim=training_set.label_dim, img_resolution=training_set.resolution, img_channels=training_set.num_channels)
+    G_common_kwargs = dict(c_dim=training_set.label_dim+100, img_resolution=training_set.resolution, img_channels=training_set.num_channels)
+    D_common_kwargs = dict(c_dim=training_set.label_dim+100, img_resolution=training_set.resolution, img_channels=training_set.num_channels)
+    G = dnnlib.util.construct_class_by_name(**G_kwargs, **G_common_kwargs).train().requires_grad_(False).to(device) # subclass of torch.nn.Module
+    D = dnnlib.util.construct_class_by_name(**D_kwargs, **D_common_kwargs).train().requires_grad_(False).to(device) # subclass of torch.nn.Module
     G_ema = copy.deepcopy(G).eval()
 
     # Resume from existing pickle.
@@ -264,11 +265,19 @@ def training_loop(
             phase_real_c = phase_real_c.to(device).split(batch_gpu)
             all_gen_z = torch.randn([len(phases) * batch_size, G.z_dim], device=device)
             all_gen_z = [phase_gen_z.split(batch_gpu) for phase_gen_z in all_gen_z.split(batch_size)]
+
+            # old
             all_gen_c = [training_set.get_label(np.random.randint(len(training_set))) for _ in range(len(phases) * batch_size)]
             all_gen_c = torch.from_numpy(np.stack(all_gen_c)).pin_memory().to(device)
-            print("shape of genlabel", all_gen_c.shape)
+            print("shape old labelcollection", all_gen_c.shape)
             all_gen_c = [phase_gen_c.split(batch_gpu) for phase_gen_c in all_gen_c.split(batch_size)]
 
+
+            # new
+            all_gen_c = [training_set.get_syn_label() for _ in range(len(phases) * batch_size)]
+            all_gen_c = torch.from_numpy(np.stack(all_gen_c)).pin_memory().to(device)
+            print("shape new labelcollection", all_gen_c.shape)
+            all_gen_c = [phase_gen_c.split(batch_gpu) for phase_gen_c in all_gen_c.split(batch_size)]
 
         # Execute training phases.
         for phase, phase_gen_z, phase_gen_c in zip(phases, all_gen_z, all_gen_c):
