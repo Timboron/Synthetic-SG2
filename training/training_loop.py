@@ -170,8 +170,9 @@ def training_loop(
     if rank == 0:
         z = torch.empty([batch_gpu, G.z_dim], device=device)
         c = torch.empty([batch_gpu, G.c_dim], device=device)
+        c_d = torch.empty([batch_gpu, D.c_dim], device=device)
         img = misc.print_module_summary(G, [z, c])
-        misc.print_module_summary(D, [img, c])
+        misc.print_module_summary(D, [img, c_d])
 
     # Setup augmentation.
     if rank == 0:
@@ -237,8 +238,8 @@ def training_loop(
         grid_size, _, _ = setup_snapshot_image_grid(training_set=training_set)
         labels = []
         for i in range(0, 1024):
-            label = np.random.randint(10572, 10672)
-            onehot = np.zeros(10672, dtype=np.float32)
+            label = np.random.randint(0, 100)
+            onehot = np.zeros(100, dtype=np.float32)
             onehot[label] = 1
             label = onehot
             labels.append(label)
