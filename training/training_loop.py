@@ -146,6 +146,7 @@ def training_loop(
     # Construct networks.
     if rank == 0:
         print('Constructing networks...')
+    print("label dim for network construction", training_set.label_dim)
     common_kwargs = dict(c_dim=training_set.label_dim, img_resolution=training_set.resolution, img_channels=training_set.num_channels)
     G = dnnlib.util.construct_class_by_name(**G_kwargs, **common_kwargs).train().requires_grad_(False).to(device) # subclass of torch.nn.Module
     D = dnnlib.util.construct_class_by_name(**D_kwargs, **common_kwargs).train().requires_grad_(False).to(device) # subclass of torch.nn.Module
@@ -254,6 +255,7 @@ def training_loop(
     if progress_fn is not None:
         progress_fn(0, total_kimg)
     while True:
+        print("detected identities for label generation", len(training_set))
 
         # Fetch training data.
         with torch.autograd.profiler.record_function('data_fetch'):
@@ -410,6 +412,8 @@ def training_loop(
         tick_start_nimg = cur_nimg
         tick_start_time = time.time()
         maintenance_time = tick_start_time - tick_end_time
+
+        done = True
         if done:
             break
 
