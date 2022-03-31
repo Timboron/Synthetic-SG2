@@ -100,6 +100,7 @@ class Dataset(torch.utils.data.Dataset):
             label = onehot
         return label.copy()
 
+    # new
     def get_syn_label(self):
         label = np.random.randint(10572, 10672)
         onehot = np.zeros(self.label_shape, dtype=np.float32)
@@ -135,6 +136,7 @@ class Dataset(torch.utils.data.Dataset):
 
     @property
     def label_shape(self):
+        # old
         # if self._label_shape is None:
         #     raw_labels = self._get_raw_labels()
         #     if raw_labels.dtype == np.int64:
@@ -142,6 +144,8 @@ class Dataset(torch.utils.data.Dataset):
         #     else:
         #         self._label_shape = raw_labels.shape[1:]
         # return list(self._label_shape)
+
+        # new
         return list([10672])
 
     @property

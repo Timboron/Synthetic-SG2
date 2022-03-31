@@ -146,11 +146,15 @@ def training_loop(
     # Construct networks.
     if rank == 0:
         print('Constructing networks...')
+
+    # old
     # common_kwargs = dict(c_dim=training_set.label_dim, img_resolution=training_set.resolution, img_channels=training_set.num_channels)
-    G_common_kwargs = dict(c_dim=10672, img_resolution=training_set.resolution, img_channels=training_set.num_channels)
-    D_common_kwargs = dict(c_dim=10672, img_resolution=training_set.resolution, img_channels=training_set.num_channels)
-    G = dnnlib.util.construct_class_by_name(**G_kwargs, **G_common_kwargs).train().requires_grad_(False).to(device) # subclass of torch.nn.Module
-    D = dnnlib.util.construct_class_by_name(**D_kwargs, **D_common_kwargs).train().requires_grad_(False).to(device) # subclass of torch.nn.Module
+
+    # new
+    common_kwargs = dict(c_dim=10672, img_resolution=training_set.resolution, img_channels=training_set.num_channels)
+
+    G = dnnlib.util.construct_class_by_name(**G_kwargs, **common_kwargs).train().requires_grad_(False).to(device) # subclass of torch.nn.Module
+    D = dnnlib.util.construct_class_by_name(**D_kwargs, **common_kwargs).train().requires_grad_(False).to(device) # subclass of torch.nn.Module
     G_ema = copy.deepcopy(G).eval()
 
     # Resume from existing pickle.
@@ -229,10 +233,7 @@ def training_loop(
         # images = torch.cat([G_ema(z=z, c=c, noise_mode='const').cpu() for z, c in zip(grid_z, grid_c)]).numpy()
         # save_image_grid(images, os.path.join(run_dir, 'fakes_init.png'), drange=[-1,1], grid_size=grid_size)
 
-        grid_size, _, labels = setup_snapshot_image_grid(training_set=training_set)
-        print("grid size")
-        print("old snapshot label shape", labels.shape)
-        print("snapshot label", labels)
+        grid_size, _, _ = setup_snapshot_image_grid(training_set=training_set)
         labels = []
         for i in range(0, 1024):
             label = np.random.randint(10572, 10672)
@@ -241,9 +242,6 @@ def training_loop(
             label = onehot
             labels.append(label)
         labels = np.stack(labels)
-        print("old snapshot label shape", labels.shape)
-        print("snapshot label", labels)
-
         grid_z = torch.randn([labels.shape[0], G.z_dim], device=device).split(batch_gpu)
         grid_c = torch.from_numpy(labels).to(device).split(batch_gpu)
         images = torch.cat([G_ema(z=z, c=c, noise_mode='const').cpu() for z, c in zip(grid_z, grid_c)]).numpy()
@@ -288,11 +286,10 @@ def training_loop(
 
             # old
             # all_gen_c = [training_set.get_label(np.random.randint(len(training_set))) for _ in range(len(phases) * batch_size)]
-            # all_gen_c = torch.from_numpy(np.stack(all_gen_c)).pin_memory().to(device)
-            # all_gen_c = [phase_gen_c.split(batch_gpu) for phase_gen_c in all_gen_c.split(batch_size)]
 
             # new
             all_gen_c = [training_set.get_syn_label() for _ in range(len(phases) * batch_size)]
+
             all_gen_c = torch.from_numpy(np.stack(all_gen_c)).pin_memory().to(device)
             all_gen_c = [phase_gen_c.split(batch_gpu) for phase_gen_c in all_gen_c.split(batch_size)]
 
@@ -441,7 +438,6 @@ def training_loop(
         tick_start_time = time.time()
         maintenance_time = tick_start_time - tick_end_time
 
-        done = True
         if done:
             break
 
