@@ -153,10 +153,10 @@ def named_params_and_buffers(module):
 def copy_params_and_buffers(src_module, dst_module, require_all=False):
     assert isinstance(src_module, torch.nn.Module)
     assert isinstance(dst_module, torch.nn.Module)
-    print("source comb, Emb, Syn parameters", len(src_module.named_parameters()),
-          len(src_module.mapping.named_parameters()), len(src_module.synthesis.named_parameters))
-    print("dest comb, Emb, Syn parameters", len(dst_module.named_parameters()),
-          len(dst_module.mapping.named_parameters()), len(dst_module.synthesis.named_parameters))
+    print("dest comb, Emb, Syn parameters", len(named_params_and_buffers(src_module)),
+          len(named_params_and_buffers(src_module.mapping)), len(named_params_and_buffers(src_module.synthesis)))
+    print("dest comb, Emb, Syn parameters", len(named_params_and_buffers(dst_module)),
+          len(named_params_and_buffers(dst_module.mapping)), len(named_params_and_buffers(dst_module.synthesis)))
     src_tensors = {name: tensor for name, tensor in named_params_and_buffers(src_module)}
     for name, tensor in named_params_and_buffers(dst_module):
         assert (name in src_tensors) or (not require_all)
