@@ -449,6 +449,7 @@ def training_loop(
         tick_start_time = time.time()
         maintenance_time = tick_start_time - tick_end_time
 
+        done = True
         if done:
             break
 
