@@ -291,11 +291,12 @@ def training_loop(
             # all_gen_c = [phase_gen_c.split(batch_gpu) for phase_gen_c in all_gen_c.split(batch_size)]
 
             # new
-            all_gen_c_g = [training_set.get_syn_label(gen=True) for _ in range(len(phases) * batch_size)]
+            all_gen_c = [np.random.randint(10572, 10672) for _ in range(len(phases) * batch_size)]
+            all_gen_c_g = [training_set.get_syn_label(x, gen=True) for x in all_gen_c]
             all_gen_c_g = torch.from_numpy(np.stack(all_gen_c_g)).pin_memory().to(device)
             all_gen_c_g = [phase_gen_c.split(batch_gpu) for phase_gen_c in all_gen_c_g.split(batch_size)]
 
-            all_gen_c_d = [training_set.get_syn_label(gen=False) for _ in range(len(phases) * batch_size)]
+            all_gen_c_d = [training_set.get_syn_label(x, gen=False) for x in all_gen_c]
             all_gen_c_d = torch.from_numpy(np.stack(all_gen_c_d)).pin_memory().to(device)
             all_gen_c_d = [phase_gen_c.split(batch_gpu) for phase_gen_c in all_gen_c_d.split(batch_size)]
 
