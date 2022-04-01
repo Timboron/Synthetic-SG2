@@ -324,7 +324,7 @@ def training_loop(
                 sync = (round_idx == batch_size // (batch_gpu * num_gpus) - 1)
                 gain = phase.interval
                 loss.accumulate_gradients(phase=phase.name, real_img=real_img, real_c=real_c, gen_z=gen_z,
-                                          gen_c_g=gen_c, sync=sync, gain=gain)
+                                          gen_c=gen_c, sync=sync, gain=gain)
             # new
             # for round_idx, (real_img, real_c, gen_z, gen_c_g, gen_c_d) in \
             #         enumerate(zip(phase_real_img, phase_real_c, phase_gen_z, phase_gen_c_g, phase_gen_c_d)):
