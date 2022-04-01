@@ -140,16 +140,16 @@ class Dataset(torch.utils.data.Dataset):
     @property
     def label_shape(self):
         # old
-        # if self._label_shape is None:
-        #     raw_labels = self._get_raw_labels()
-        #     if raw_labels.dtype == np.int64:
-        #         self._label_shape = [int(np.max(raw_labels)) + 1]
-        #     else:
-        #         self._label_shape = raw_labels.shape[1:]
-        # return list(self._label_shape)
+        if self._label_shape is None:
+            raw_labels = self._get_raw_labels()
+            if raw_labels.dtype == np.int64:
+                self._label_shape = [int(np.max(raw_labels)) + 1]
+            else:
+                self._label_shape = raw_labels.shape[1:]
+        return list(self._label_shape)
 
         # new
-        return list([10672])
+        # return list([10672])
 
     @property
     def label_dim(self):
