@@ -1,4 +1,4 @@
-path = "~/Synthetic-SG2/generated/sg2-casia-cond/"
+path = "" # "~/Synthetic-SG2/generated/sg2-casia-cond/"
 with open("image_path_list.txt", "w") as file:
 
     for i in range(0, 10572):
