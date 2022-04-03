@@ -23,7 +23,7 @@ import legacy
 
 #----------------------------------------------------------------------------
 
-def num_range(s) -> List[int]:
+def num_range(s):
     '''Accept either a comma separated list of numbers 'a,b,c' or a range 'a-c' and return as a list of ints.'''
 
     range_re = re.compile(r'^(\d+)-(\d+)$')
