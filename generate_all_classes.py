@@ -66,12 +66,14 @@ def generate_images(
         label = torch.zeros([1, G.c_dim], device=device)
         label[:, class_idx] = 1
 
+        os.makedirs(outdir+"/"+str(class_idx), exist_ok=True)
+
         # Generate images.
         for seed_idx, seed in enumerate(seeds):
             z = torch.from_numpy(np.random.RandomState(seed).randn(1, G.z_dim)).to(device)
             img = G(z, label, truncation_psi=truncation_psi, noise_mode=noise_mode)
             img = (img.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255).to(torch.uint8)
-            PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB').save(f'{outdir}/identity{class_idx:05d}/seed{seed:04d}.png')
+            PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB').save(f'{outdir}/{class_idx}/seed{seed:04d}.png')
             print("Saving images for identity", class_idx)
 
 
