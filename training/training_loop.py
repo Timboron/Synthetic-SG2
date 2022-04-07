@@ -21,6 +21,7 @@ from torch_utils import training_stats
 from torch_utils.ops import conv2d_gradfix
 from torch_utils.ops import grid_sample_gradfix
 from IDNet.idnetwork import IDNet
+from torch import nn
 
 import legacy
 from metrics import metric_main
@@ -198,6 +199,7 @@ def training_loop(
     if rank == 0:
         print('Setting up training phases...')
     loss = dnnlib.util.construct_class_by_name(device=device, **ddp_modules, **loss_kwargs) # subclass of training.loss.Loss
+    idnet_loss = nn.CrossEntropyLoss()
     phases = []
     for name, module, opt_kwargs, reg_interval in [('G', G, G_opt_kwargs, G_reg_interval), ('D', D, D_opt_kwargs, D_reg_interval)]:
         if reg_interval is None:
@@ -298,7 +300,7 @@ def training_loop(
                 sync = (round_idx == batch_size // (batch_gpu * num_gpus) - 1)
                 gain = phase.interval
                 loss.accumulate_gradients(phase=phase.name, real_img=real_img, real_c=real_c, gen_z=gen_z,
-                                          gen_c=gen_c, sync=sync, gain=gain)
+                                          gen_c=gen_c, sync=sync, gain=gain, classifier_loss=idnet_loss)
 
             # Update weights.
             phase.module.requires_grad_(False)
