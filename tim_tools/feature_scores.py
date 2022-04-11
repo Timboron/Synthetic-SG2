@@ -81,5 +81,6 @@ def generate_match(ctx: click.Context, pathname: str, comp_count: int, all_imps:
     impostor_file.close()
     genuine_file.close()
 
+
 if __name__ == "__main__":
     generate_match()
