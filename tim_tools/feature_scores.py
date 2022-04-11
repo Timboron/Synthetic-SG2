@@ -59,12 +59,11 @@ def generate_match(ctx: click.Context, pathname: str, comp_count: int, all_imps:
         else:
             impostors = ["{:0>6d}".format(impostor) for impostor in
                          np.random.choice(list(range(0, int(identity))) + list(range(int(identity)+1, 10572)), size=comp_count)]
-            print(impostors)
         references = []
         probes = []
         for impostor in impostors:
             impostor_path = pathname + "/" + str(impostor)
-            impostor_features = [np.load(x) for x in [id_path + "/" + y for y in os.listdir(impostor_path) if ".npy" in y]]
+            impostor_features = [np.load(x) for x in [impostor_path + "/" + y for y in os.listdir(impostor_path) if ".npy" in y]]
             if len(impostor_features) < 2:
                 continue
             elif len(impostor_features) < 3:
