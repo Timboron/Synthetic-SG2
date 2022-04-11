@@ -10,6 +10,10 @@ from numpy.linalg import norm
 
 
 def similarity(emb0, emb1):
+    if emb0.ndim < 2 or emb1.ndim < 2:
+        print("ERROR")
+        print(emb0, emb1)
+        return []
     assert (emb0.shape[0] == emb1.shape[0])
     assert (emb0.shape[1] == emb1.shape[1])
     dot = np.sum(np.multiply(emb0, emb1), axis=1)
