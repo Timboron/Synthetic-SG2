@@ -12,6 +12,7 @@ from numpy.linalg import norm
 def similarity(emb0, emb1):
     assert (emb0.shape[0] == emb1.shape[0])
     assert (emb0.shape[1] == emb1.shape[1])
+    print(emb0.shape, emb1.shape)
     dot = np.sum(np.multiply(emb0, emb1), axis=1)
     norm = np.linalg.norm(emb0, axis=1) * np.linalg.norm(emb1, axis=1)
     sim = np.clip(dot / norm, -1., 1.)
@@ -74,7 +75,7 @@ def generate_match(ctx: click.Context, pathname: str, comp_count: int, all_imps:
                     references.extend([features[0]] * probe_count + [features[1]] * probe_count)
                 probes.extend(impostor_features[2:] * ref_mul)
         imp_score = similarity(np.vstack(references), np.vstack(probes))
-        impostor_file.write(imp_score)
+        impostor_file.write(str(imp_score))
         impostor_file.write('\n')
 
     impostor_file.close()
