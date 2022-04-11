@@ -372,10 +372,10 @@ def training_loop(
         torch.cuda.reset_peak_memory_stats()
         fields += [
             f"augment {training_stats.report0('Progress/augment', float(augment_pipe.p.cpu()) if augment_pipe is not None else 0):.3f}"]
-        fields += [f"gendiscloss {stats_collector.mean('Loss/G/disc')}"]
-        fields += [f"genidloss {stats_collector.mean('Loss/G/id')}"]
-        fields += [f"discloss {stats_collector.mean('Loss/D/loss')}"]
-        fields += [f"idloss {stats_collector.mean('Loss/idnet/loss')}"]
+        fields += ["gendiscloss {:.3f}".format(stats_collector.mean('Loss/G/disc'))]
+        fields += ["genidloss {:.3f}".format(stats_collector.mean('Loss/G/id'))]
+        fields += ["discloss {:.3f}".format(stats_collector.mean('Loss/D/loss'))]
+        fields += ["idloss {:.3f}".format(stats_collector.mean('Loss/idnet/loss'))]
         training_stats.report0('Timing/total_hours', (tick_end_time - start_time) / (60 * 60))
         training_stats.report0('Timing/total_days', (tick_end_time - start_time) / (24 * 60 * 60))
         if rank == 0:
