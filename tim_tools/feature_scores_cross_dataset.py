@@ -66,8 +66,9 @@ def generate_match(ctx: click.Context, refpathname: str, probepathname: str, com
         references = np.vstack(references)
         probes = np.vstack(probes)
         gen_score = similarity(references, probes)
-        genuine_file.write(str(gen_score))
-        genuine_file.write('\n')
+        for sim in gen_score:
+            genuine_file.write(str(sim))
+            genuine_file.write('\n')
 
         # impostor score
         if all_imps:
@@ -98,8 +99,9 @@ def generate_match(ctx: click.Context, refpathname: str, probepathname: str, com
         references = np.vstack(references)
         probes = np.vstack(probes)
         imp_score = similarity(references, probes)
-        impostor_file.write(str(imp_score))
-        impostor_file.write('\n')
+        for sim in imp_score:
+            impostor_file.write(str(sim))
+            impostor_file.write('\n')
 
     impostor_file.close()
     genuine_file.close()
