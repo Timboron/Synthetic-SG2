@@ -24,9 +24,6 @@ class CosFace(nn.Module):
         cos_theta = torch.mm(embbedings, kernel_norm)
         cos_theta = cos_theta.clamp(-1, 1)  # for numerical stability
         label = torch.argmax(label, dim=1)
-        print(label)
-        print(label.shape)
-        return
         index = torch.where(label != -1)[0]
         m_hot = torch.zeros(index.size()[0], cos_theta.size()[1], device=cos_theta.device)
         m_hot.scatter_(1, label[index, None], self.m)
