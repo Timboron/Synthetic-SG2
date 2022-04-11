@@ -57,7 +57,6 @@ def generate_match(ctx: click.Context, pathname: str, comp_count: int, all_imps:
         else:
             impostors = ["{:0>6d}".format(impostor) for impostor in
                          np.random.choice(list(range(0, int(identity))) + list(range(int(identity), 10572)), size=comp_count)]
-            print(identity, impostors)
         references = []
         probes = []
         for impostor in impostors:
