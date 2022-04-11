@@ -16,7 +16,7 @@ from torch_utils.ops import conv2d_gradfix
 #----------------------------------------------------------------------------
 
 class Loss:
-    def accumulate_gradients(self, phase, real_img, real_c, gen_z, gen_c, sync, gain, classifier_loss): # to be overridden by subclass
+    def accumulate_gradients(self, phase, real_img, real_c, gen_z, gen_c, sync, gain): # to be overridden by subclass
         raise NotImplementedError()
 
 #----------------------------------------------------------------------------
@@ -36,6 +36,7 @@ class StyleGAN2Loss(Loss):
         self.pl_decay = pl_decay
         self.pl_weight = pl_weight
         self.pl_mean = torch.zeros([], device=device)
+        self.idnet_loss = nn.CrossEntropyLoss()
 
     def run_G(self, z, c, sync):
         with misc.ddp_sync(self.G_mapping, sync):
@@ -63,7 +64,7 @@ class StyleGAN2Loss(Loss):
             class_pred = self.IDNet(img, c)
         return class_pred
 
-    def accumulate_gradients(self, phase, real_img, real_c, gen_z, gen_c, sync, gain, classifier_loss):
+    def accumulate_gradients(self, phase, real_img, real_c, gen_z, gen_c, sync, gain):
         assert phase in ['Gmain', 'Greg', 'Gboth', 'Dmain', 'Dreg', 'Dboth']
         do_Gmain = (phase in ['Gmain', 'Gboth'])
         do_Dmain = (phase in ['Dmain', 'Dboth'])
@@ -81,7 +82,7 @@ class StyleGAN2Loss(Loss):
                 pred_classes = self.run_IDNet(gen_img, gen_c, sync=False)
                 loss_disc = torch.nn.functional.softplus(-gen_logits)
                 print(pred_classes.shape, gen_c.shape)
-                loss_id = classifier_loss(pred_classes, gen_c)
+                loss_id = self.idnet_loss(pred_classes, gen_c.long())
                 loss_Gmain = loss_disc + loss_id
                 training_stats.report('Loss/G/disc', loss_disc)
                 training_stats.report('Loss/G/id', loss_id)
