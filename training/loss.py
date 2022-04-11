@@ -65,7 +65,7 @@ class StyleGAN2Loss(Loss):
         return class_pred
 
     def accumulate_gradients(self, phase, real_img, real_c, gen_z, gen_c, sync, gain):
-        assert phase in ['Gmain', 'Greg', 'Gboth', 'Dmain', 'Dreg', 'Dboth']
+        assert phase in ['Gmain', 'Greg', 'Gboth', 'Dmain', 'Dreg', 'Dboth', 'IDNet']
         do_Gmain = (phase in ['Gmain', 'Gboth'])
         do_Dmain = (phase in ['Dmain', 'Dboth'])
         do_Gpl   = (phase in ['Greg', 'Gboth']) and (self.pl_weight != 0)
@@ -81,7 +81,6 @@ class StyleGAN2Loss(Loss):
                 training_stats.report('Loss/signs/fake', gen_logits.sign())
                 pred_classes = self.run_IDNet(gen_img, gen_c, sync=False)
                 loss_disc = torch.nn.functional.softplus(-gen_logits)
-                print(pred_classes.shape, torch.argmax(gen_c, dim=1).shape)
                 loss_id = self.idnet_loss(pred_classes, torch.argmax(gen_c, dim=1))
                 loss_Gmain = loss_disc + loss_id
                 training_stats.report('Loss/G/disc', loss_disc)
@@ -151,7 +150,7 @@ class StyleGAN2Loss(Loss):
             with torch.autograd.profiler.record_function('IDNet_forward'):
                 gen_img, _ = self.run_G(gen_z, gen_c, sync=sync)
                 pred_classes = self.run_IDNet(gen_img, gen_c, sync=False)
-                loss_IDNet = classifier_loss(pred_classes, gen_c)
+                loss_IDNet = self.idnet_loss(pred_classes, torch.argmax(gen_c, dim=1))
                 training_stats.report('Loss/idnet', loss_IDNet)
             with torch.autograd.profiler.record_function('IDNet_backward'):
                 loss_IDNet.mean().mul(gain).backward()
