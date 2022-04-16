@@ -9,7 +9,7 @@ def l2_norm(input, axis = 1):
 
 
 class CosFace(nn.Module):
-    def __init__(self, in_features, out_features, s=64.0, m=0.35):
+    def __init__(self, in_features, out_features, s=32.0, m=0.3):
         super(CosFace, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
