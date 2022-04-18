@@ -175,7 +175,7 @@ def training_loop(
         print(f'Resuming from "{resume_pkl}"')
         with dnnlib.util.open_url(resume_pkl) as f:
             resume_data = legacy.load_network_pkl(f)
-        for name, module in [('G', G), ('D', D), ('G_ema', G_ema), ('backbone', backbone), ('CosFace', cosface)]:
+        for name, module in [('G', G), ('D', D), ('G_ema', G_ema), ('cosface', cosface)]:
             misc.copy_params_and_buffers(resume_data[name], module, require_all=False)
 
     # load backbone
@@ -434,7 +434,7 @@ def training_loop(
         if (network_snapshot_ticks is not None) and (done or cur_tick % network_snapshot_ticks == 0):
             snapshot_data = dict(training_set_kwargs=dict(training_set_kwargs))
             for name, module in [('G', G), ('D', D), ('G_ema', G_ema), ('augment_pipe', augment_pipe)
-                                 , ('backbone', backbone), ('cosface', cosface)
+                                 , ('cosface', cosface)
                                  ]:
                 if module is not None:
                     if num_gpus > 1 and name != 'backbone' and name != 'cosface':
