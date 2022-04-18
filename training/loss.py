@@ -90,6 +90,8 @@ class StyleGAN2Loss(Loss):
                 self.var_list.clear()
 
                 gen_img, _gen_ws = self.run_G(gen_z, gen_c, sync=(sync and not do_Gpl)) # May get synced by Gpl.
+                print("MIN", torch.min(gen_img))
+                print("MAX", torch.max(gen_img))
                 gen_logits = self.run_D(gen_img, gen_c, sync=False)
                 training_stats.report('Loss/scores/fake', gen_logits)
                 training_stats.report('Loss/signs/fake', gen_logits.sign())
