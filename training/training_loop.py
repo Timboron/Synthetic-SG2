@@ -16,6 +16,8 @@ import PIL.Image
 import numpy as np
 import torch
 import dnnlib
+from IDNet.backbones.iresnet import iresnet50
+from IDNet.loss import CosFace
 from torch_utils import misc
 from torch_utils import training_stats
 from torch_utils.ops import conv2d_gradfix
@@ -28,6 +30,7 @@ from metrics import metric_main
 
 
 # ----------------------------------------------------------------------------
+
 def setup_snapshot_image_grid(training_set, random_seed=0):
     rnd = np.random.RandomState(random_seed)
     gw = np.clip(7680 // training_set.image_shape[2], 7, 32)
@@ -162,7 +165,8 @@ def training_loop(
         device)  # subclass of torch.nn.Module
     D = dnnlib.util.construct_class_by_name(**D_kwargs, **common_kwargs).train().requires_grad_(False).to(
         device)  # subclass of torch.nn.Module
-    IDNet = classnet(512, 10572).train().requires_grad_(False).to(device)
+    backbone = iresnet50(dropout=0.4, num_features=512).eval().requires_grad_(False).to(device)
+    cosface = CosFace(512, 10572).train().requires_grad_(False).to(device)
     G_ema = copy.deepcopy(G).eval()
 
     # Resume from existing pickle.
@@ -170,8 +174,12 @@ def training_loop(
         print(f'Resuming from "{resume_pkl}"')
         with dnnlib.util.open_url(resume_pkl) as f:
             resume_data = legacy.load_network_pkl(f)
-        for name, module in [('G', G), ('D', D), ('G_ema', G_ema), ('IDNet', IDNet)]:
+        for name, module in [('G', G), ('D', D), ('G_ema', G_ema), ('backbone', backbone), ('CosFace', cosface)]:
             misc.copy_params_and_buffers(resume_data[name], module, require_all=False)
+
+    # load backbone
+    weight = torch.load("/data/fboutros/r50_webface_COSFace035/31614backbone.pth")
+    backbone.load_state_dict(weight)
 
     # Print network summary tables.
     if rank == 0:
@@ -180,7 +188,8 @@ def training_loop(
         c_d = torch.empty([batch_gpu, D.c_dim], device=device)
         img = misc.print_module_summary(G, [z, c])
         misc.print_module_summary(D, [img, c_d])
-        misc.print_module_summary(IDNet, [img, c_d])
+        misc.print_module_summary(backbone, [img, 512])
+        misc.print_module_summary(cosface, [512, c_d])
     # Setup augmentation.
     if rank == 0:
         print('Setting up augmentation...')
@@ -197,8 +206,8 @@ def training_loop(
     if rank == 0:
         print(f'Distributing across {num_gpus} GPUs...')
     ddp_modules = dict()
-    for name, module in [('G_mapping', G.mapping), ('G_synthesis', G.synthesis), ('D', D), ('IDNet', IDNet),
-                         (None, G_ema), ('augment_pipe', augment_pipe)]:
+    for name, module in [('G_mapping', G.mapping), ('G_synthesis', G.synthesis), ('D', D), ('backbone', backbone),
+                         ('cosface', cosface), (None, G_ema), ('augment_pipe', augment_pipe)]:
         if (num_gpus > 1) and (module is not None) and len(list(module.parameters())) != 0:
             module.requires_grad_(True)
             module = torch.nn.parallel.DistributedDataParallel(module, device_ids=[device], broadcast_buffers=False)
@@ -206,11 +215,33 @@ def training_loop(
         if name is not None:
             ddp_modules[name] = module
 
+    # Batch normalization aspects
+    mean_list = []
+    var_list = []
+    teacher_running_mean = []
+    teacher_running_var = []
+
+    def hook_fn_forward(module, input, output):
+        input = input[0]
+        mean = input.mean([0, 2, 3])
+        # use biased var in train
+        var = input.var([0, 2, 3], unbiased=False)
+
+        mean_list.append(mean)
+        var_list.append(var)
+        teacher_running_mean.append(module.running_mean)
+        teacher_running_var.append(module.running_var)
+
+    for m in backbone.modules():
+        if isinstance(m, nn.BatchNorm2d):
+            m.register_forward_hook(hook_fn_forward)
+
     # Setup training phases.
     if rank == 0:
         print('Setting up training phases...')
-    loss = dnnlib.util.construct_class_by_name(device=device, **ddp_modules,
-                                               **loss_kwargs)  # subclass of training.loss.Loss
+    loss = dnnlib.util.construct_class_by_name(device=device, mean_list=mean_list, var_list=var_list,
+                                               trm=teacher_running_mean, trv=teacher_running_var,
+                                               **ddp_modules, **loss_kwargs)
 
     phases = []
     for name, module, opt_kwargs, reg_interval in [('G', G, G_opt_kwargs, G_reg_interval),
@@ -229,8 +260,8 @@ def training_loop(
             phases += [dnnlib.EasyDict(name=name + 'main', module=module, opt=opt, interval=1)]
             phases += [dnnlib.EasyDict(name=name + 'reg', module=module, opt=opt, interval=reg_interval)]
 
-    opt_idn = torch.optim.SGD(params=IDNet.parameters(), lr=0.02, momentum=0.9)
-    phases += [dnnlib.EasyDict(name='IDNet', module=IDNet, opt=opt_idn, interval=1)]
+    opt_idn = torch.optim.SGD(params=cosface.parameters(), lr=0.02, momentum=0.9)
+    phases += [dnnlib.EasyDict(name='IDNet', module=cosface, opt=opt_idn, interval=1)]
 
     for phase in phases:
         phase.start_event = None
@@ -312,6 +343,10 @@ def training_loop(
             # old
             for round_idx, (real_img, real_c, gen_z, gen_c) in \
                     enumerate(zip(phase_real_img, phase_real_c, phase_gen_z, phase_gen_c)):
+
+                mean_list.clear()
+                var_list.clear()
+
                 sync = (round_idx == batch_size // (batch_gpu * num_gpus) - 1)
                 gain = phase.interval
                 loss.accumulate_gradients(phase=phase.name, real_img=real_img, real_c=real_c, gen_z=gen_z,
@@ -372,10 +407,11 @@ def training_loop(
         torch.cuda.reset_peak_memory_stats()
         fields += [
             f"augment {training_stats.report0('Progress/augment', float(augment_pipe.p.cpu()) if augment_pipe is not None else 0):.3f}"]
-        fields += ["gendiscloss {:.3f}".format(stats_collector.mean('Loss/G/disc'))]
-        fields += ["genidloss {:.3f}".format(stats_collector.mean('Loss/G/id'))]
-        fields += ["discloss {:.3f}".format(stats_collector.mean('Loss/D/loss'))]
-        fields += ["idloss {:.3f}".format(stats_collector.mean('Loss/idnet/loss'))]
+        fields += ["g_disc_loss {:.3f}".format(stats_collector.mean('Loss/G/disc'))]
+        fields += ["g_id_loss {:.3f}".format(stats_collector.mean('Loss/G/id'))]
+        fields += ["g_bns_loss {:.3f}".format(stats_collector.mean('Loss/G/bns'))]
+        fields += ["d_loss {:.3f}".format(stats_collector.mean('Loss/D/loss'))]
+        fields += ["id_loss {:.3f}".format(stats_collector.mean('Loss/idnet/loss'))]
         training_stats.report0('Timing/total_hours', (tick_end_time - start_time) / (60 * 60))
         training_stats.report0('Timing/total_days', (tick_end_time - start_time) / (24 * 60 * 60))
         if rank == 0:
@@ -400,7 +436,7 @@ def training_loop(
         if (network_snapshot_ticks is not None) and (done or cur_tick % network_snapshot_ticks == 0):
             snapshot_data = dict(training_set_kwargs=dict(training_set_kwargs))
             for name, module in [('G', G), ('D', D), ('G_ema', G_ema), ('augment_pipe', augment_pipe)
-                                 , ('IDNet', IDNet)
+                                 , ('backbone', backbone), ('cosface', cosface)
                                  ]:
                 if module is not None:
                     if num_gpus > 1 and name != 'IDNet':

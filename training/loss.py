@@ -9,6 +9,8 @@
 import numpy as np
 import torch
 from torch import nn
+from torchvision import transforms
+
 from torch_utils import training_stats
 from torch_utils import misc
 from torch_utils.ops import conv2d_gradfix
@@ -22,13 +24,20 @@ class Loss:
 #----------------------------------------------------------------------------
 
 class StyleGAN2Loss(Loss):
-    def __init__(self, device, G_mapping, G_synthesis, D, IDNet, augment_pipe=None, style_mixing_prob=0.9, r1_gamma=10, pl_batch_shrink=2, pl_decay=0.01, pl_weight=2):
+    def __init__(self, device, mean_list, var_list, trm, trv, G_mapping, G_synthesis, D, backbone, cosface,
+                 augment_pipe=None, style_mixing_prob=0.9, r1_gamma=10, pl_batch_shrink=2, pl_decay=0.01, pl_weight=2):
         super().__init__()
         self.device = device
+        self.mean_list = mean_list
+        self.var_list = var_list
+        self.teacher_running_mean = trm
+        self.teacher_running_var = trv
+        self.MSE_loss = nn.MSELoss.to(self.device)
         self.G_mapping = G_mapping
         self.G_synthesis = G_synthesis
         self.D = D
-        self.IDNet = IDNet
+        self.backbone = backbone
+        self.cosface = cosface
         self.augment_pipe = augment_pipe
         self.style_mixing_prob = style_mixing_prob
         self.r1_gamma = r1_gamma
@@ -37,6 +46,7 @@ class StyleGAN2Loss(Loss):
         self.pl_weight = pl_weight
         self.pl_mean = torch.zeros([], device=device)
         self.idnet_loss = nn.CrossEntropyLoss()
+        self.resize = nn.Sequential(transforms.Resize(112))
 
     def run_G(self, z, c, sync):
         with misc.ddp_sync(self.G_mapping, sync):
@@ -61,7 +71,8 @@ class StyleGAN2Loss(Loss):
         if self.augment_pipe is not None:
             img = self.augment_pipe(img)
         with misc.ddp_sync(self.IDNet, sync):
-            class_pred = self.IDNet(img, c)
+            features = self.backbone(self.resize(img))
+            class_pred = self.cosface(features, c)
         return class_pred
 
     def accumulate_gradients(self, phase, real_img, real_c, gen_z, gen_c, sync, gain):
@@ -75,16 +86,29 @@ class StyleGAN2Loss(Loss):
         # Gmain: Maximize logits for generated images.
         if do_Gmain:
             with torch.autograd.profiler.record_function('Gmain_forward'):
+                self.mean_list.clear()
+                self.var_list.clear()
+
                 gen_img, _gen_ws = self.run_G(gen_z, gen_c, sync=(sync and not do_Gpl)) # May get synced by Gpl.
                 gen_logits = self.run_D(gen_img, gen_c, sync=False)
                 training_stats.report('Loss/scores/fake', gen_logits)
                 training_stats.report('Loss/signs/fake', gen_logits.sign())
                 pred_classes = self.run_IDNet(gen_img, gen_c, sync=False)
+
                 loss_disc = torch.nn.functional.softplus(-gen_logits)
+
                 loss_id = 0.05 * self.idnet_loss(pred_classes, torch.argmax(gen_c, dim=1))
-                loss_Gmain = loss_disc + loss_id
+
+                loss_bns = torch.zeros(1).to(self.device)
+                for num in range(len(self.mean_list)):
+                    loss_bns += self.MSE_loss(self.mean_list[num], self.teacher_running_mean[num]) + self.MSE_loss(
+                        self.var_list[num], self.teacher_running_var[num])
+                loss_bns = 0.1 * loss_bns / len(self.mean_list)
+
+                loss_Gmain = loss_disc + loss_id + loss_bns
                 training_stats.report('Loss/G/disc', loss_disc)
                 training_stats.report('Loss/G/id', loss_id)
+                training_stats.report('Loss/G/bns', loss_bns)
                 training_stats.report('Loss/G/loss', loss_Gmain)
             with torch.autograd.profiler.record_function('Gmain_backward'):
                 loss_Gmain.mean().mul(gain).backward()
