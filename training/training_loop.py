@@ -24,6 +24,7 @@ from torch_utils.ops import conv2d_gradfix
 from torch_utils.ops import grid_sample_gradfix
 from IDNet.idnetwork import IDNet as classnet
 from torch import nn
+from torchvision import transforms
 
 import legacy
 from metrics import metric_main
@@ -188,7 +189,8 @@ def training_loop(
         c_d = torch.empty([batch_gpu, D.c_dim], device=device)
         img = misc.print_module_summary(G, [z, c])
         misc.print_module_summary(D, [img, c_d])
-        misc.print_module_summary(backbone, [img])
+        resize = nn.Sequential(transforms.Resize(112))
+        misc.print_module_summary(backbone, [resize(img)])
         misc.print_module_summary(cosface, [512, c_d])
     # Setup augmentation.
     if rank == 0:
