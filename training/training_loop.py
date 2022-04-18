@@ -190,8 +190,8 @@ def training_loop(
         img = misc.print_module_summary(G, [z, c])
         misc.print_module_summary(D, [img, c_d])
         resize = nn.Sequential(transforms.Resize(112))
-        misc.print_module_summary(backbone, [resize(img)])
-        misc.print_module_summary(cosface, [512, c_d])
+        features = misc.print_module_summary(backbone, [resize(img)])
+        misc.print_module_summary(cosface, [features, c_d])
     # Setup augmentation.
     if rank == 0:
         print('Setting up augmentation...')
