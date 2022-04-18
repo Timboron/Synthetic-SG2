@@ -437,7 +437,7 @@ def training_loop(
                                  , ('backbone', backbone), ('cosface', cosface)
                                  ]:
                 if module is not None:
-                    if num_gpus > 1 and name != 'IDNet':
+                    if num_gpus > 1 and name != 'backbone' and name != 'cosface':
                         misc.check_ddp_consistency(module, ignore_regex=r'.*\.w_avg')
                     module = copy.deepcopy(module).eval().requires_grad_(False).cpu()
                 snapshot_data[name] = module
