@@ -71,7 +71,11 @@ class StyleGAN2Loss(Loss):
         if self.augment_pipe is not None:
             img = self.augment_pipe(img)
         with misc.ddp_sync(self.cosface, sync):
-            features = self.backbone(self.resize(img))
+            img = self.resize(img)
+            img -= img.min(1, keepdim=True)[0]
+            img /= img.max(1, keepdim=True)[0]
+            img = img * 2 - 1
+            features = self.backbone(img)
             class_pred = self.cosface(features, c)
         return class_pred
 
@@ -90,11 +94,6 @@ class StyleGAN2Loss(Loss):
                 self.var_list.clear()
 
                 gen_img, _gen_ws = self.run_G(gen_z, gen_c, sync=(sync and not do_Gpl)) # May get synced by Gpl.
-                gen_img -= gen_img.min(1, keepdim=True)[0]
-                gen_img /= gen_img.max(1, keepdim=True)[0]
-                gen_img = gen_img * 2 - 1
-                print("MIN", torch.min(gen_img))
-                print("MAX", torch.max(gen_img))
                 gen_logits = self.run_D(gen_img, gen_c, sync=False)
                 training_stats.report('Loss/scores/fake', gen_logits)
                 training_stats.report('Loss/signs/fake', gen_logits.sign())
