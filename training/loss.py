@@ -32,7 +32,7 @@ class StyleGAN2Loss(Loss):
         self.var_list = var_list
         self.teacher_running_mean = trm
         self.teacher_running_var = trv
-        self.MSE_loss = nn.MSELoss.to(self.device)
+        self.MSE_loss = nn.MSELoss()
         self.G_mapping = G_mapping
         self.G_synthesis = G_synthesis
         self.D = D
