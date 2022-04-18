@@ -66,7 +66,7 @@ def generate_images(
         label = torch.zeros([1, G.c_dim], device=device)
         label[:, class_idx] = 1
 
-        os.makedirs(outdir+"/"+str(class_idx), exist_ok=True)
+        os.makedirs(outdir+"/"+f'{class_idx:06d}', exist_ok=True)
 
         # Generate images.
         for seed_idx, seed in enumerate(seeds):
