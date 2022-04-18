@@ -34,7 +34,7 @@ def num_range(s: str) -> List[int]:
     return [int(x) for x in vals]
 
 #----------------------------------------------------------------------------
-h
+
 @click.command()
 @click.pass_context
 @click.option('--network', 'network_pkl', help='Network pickle filename', required=True)
