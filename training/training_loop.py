@@ -188,7 +188,7 @@ def training_loop(
         c_d = torch.empty([batch_gpu, D.c_dim], device=device)
         img = misc.print_module_summary(G, [z, c])
         misc.print_module_summary(D, [img, c_d])
-        misc.print_module_summary(backbone, [img, 512])
+        misc.print_module_summary(backbone, [img])
         misc.print_module_summary(cosface, [512, c_d])
     # Setup augmentation.
     if rank == 0:
@@ -343,10 +343,6 @@ def training_loop(
             # old
             for round_idx, (real_img, real_c, gen_z, gen_c) in \
                     enumerate(zip(phase_real_img, phase_real_c, phase_gen_z, phase_gen_c)):
-
-                mean_list.clear()
-                var_list.clear()
-
                 sync = (round_idx == batch_size // (batch_gpu * num_gpus) - 1)
                 gain = phase.interval
                 loss.accumulate_gradients(phase=phase.name, real_img=real_img, real_c=real_c, gen_z=gen_z,
