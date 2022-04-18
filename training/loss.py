@@ -70,7 +70,7 @@ class StyleGAN2Loss(Loss):
     def run_IDNet(self, img, c, sync):
         if self.augment_pipe is not None:
             img = self.augment_pipe(img)
-        with misc.ddp_sync(self.IDNet, sync):
+        with misc.ddp_sync(self.cosface, sync):
             features = self.backbone(self.resize(img))
             class_pred = self.cosface(features, c)
         return class_pred
