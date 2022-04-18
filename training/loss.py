@@ -92,6 +92,7 @@ class StyleGAN2Loss(Loss):
                 gen_img, _gen_ws = self.run_G(gen_z, gen_c, sync=(sync and not do_Gpl)) # May get synced by Gpl.
                 gen_img -= gen_img.min(1, keepdim=True)[0]
                 gen_img /= gen_img.max(1, keepdim=True)[0]
+                gen_img = gen_img * 2 - 1
                 print("MIN", torch.min(gen_img))
                 print("MAX", torch.max(gen_img))
                 gen_logits = self.run_D(gen_img, gen_c, sync=False)
