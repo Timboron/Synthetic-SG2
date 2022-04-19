@@ -9,14 +9,18 @@ def l2_norm(input, axis = 1):
 
 
 class CosFace(nn.Module):
-    def __init__(self, in_features, out_features, s=64.0, m=0.35):
+    def __init__(self, in_features, out_features, s=64.0):
         super(CosFace, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
         self.s = s
-        self.m = m
+        self.m = 0
+        self.m_delta = 0.05
         self.kernel = nn.Parameter(torch.FloatTensor(in_features, out_features))
         nn.init.normal_(self.kernel, std=0.01)
+
+    def inc_margin(self):
+        self.m += self.m_delta
 
     def forward(self, embbedings, label):
         embbedings = l2_norm(embbedings, axis=1)

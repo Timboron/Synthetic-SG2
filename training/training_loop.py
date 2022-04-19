@@ -410,6 +410,7 @@ def training_loop(
         fields += ["g_bns_loss {:.3f}".format(stats_collector.mean('Loss/G/bns'))]
         fields += ["d_loss {:.3f}".format(stats_collector.mean('Loss/D/loss'))]
         fields += ["id_loss {:.3f}".format(stats_collector.mean('Loss/idnet/loss'))]
+        fields += ["margin{:.3f}".format(cosface.m)]
         training_stats.report0('Timing/total_hours', (tick_end_time - start_time) / (60 * 60))
         training_stats.report0('Timing/total_days', (tick_end_time - start_time) / (24 * 60 * 60))
         if rank == 0:
@@ -492,6 +493,8 @@ def training_loop(
         tick_start_nimg = cur_nimg
         tick_start_time = time.time()
         maintenance_time = tick_start_time - tick_end_time
+        if cur_tick % 800 == 0:
+            cosface.inc_margin()
 
         if done:
             break
