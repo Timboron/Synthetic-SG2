@@ -14,7 +14,7 @@ class CosFace(nn.Module):
         self.in_features = in_features
         self.out_features = out_features
         self.s = s
-        self.m = 0
+        self.m = 0.2
         self.m_delta = 0.05
         self.kernel = nn.Parameter(torch.FloatTensor(in_features, out_features))
         nn.init.normal_(self.kernel, std=0.01)

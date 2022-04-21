@@ -68,15 +68,13 @@ class StyleGAN2Loss(Loss):
         return logits
 
     def run_IDNet(self, img, c, sync):
-        if self.augment_pipe is not None:
-            img = self.augment_pipe(img)
-        with misc.ddp_sync(self.cosface, sync):
-            img = self.resize(img)
-            img -= img.min(1, keepdim=True)[0]
-            img /= img.max(1, keepdim=True)[0]
-            img = img * 2 - 1
-            features = self.backbone(img)
-            class_pred = self.cosface(features, c)
+        # with misc.ddp_sync(self.cosface, sync):
+        img = self.resize(img)
+        img -= img.min(1, keepdim=True)[0]
+        img /= img.max(1, keepdim=True)[0]
+        img = img * 2 - 1
+        features = self.backbone(img)
+        class_pred = self.cosface(features, c)
         return class_pred
 
     def accumulate_gradients(self, phase, real_img, real_c, gen_z, gen_c, sync, gain):
