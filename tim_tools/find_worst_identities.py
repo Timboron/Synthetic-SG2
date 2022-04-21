@@ -46,7 +46,6 @@ def generate_match(ctx: click.Context, pathname: str):
             references = np.vstack(([features[0]] * probe_count, [features[1]] * probe_count))
             probes = np.vstack((features[2:] * 2))
             gen_score = similarity(references, probes)
-            print(gen_score)
         if len(gen_score > 0):
             genuine_scores[identity] = sum(gen_score)/len(gen_score)
 
