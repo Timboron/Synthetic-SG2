@@ -25,10 +25,7 @@ def similarity(emb0, emb1):
 @click.command()
 @click.pass_context
 @click.option('--path', 'pathname', required=True)
-@click.option('--outpath', 'outpathname', required=True)
-@click.option('--count', 'comp_count', default=100)
-@click.option('--all_impostors', 'all_imps', default=False)
-def generate_match(ctx: click.Context, pathname: str, comp_count: int, all_imps: bool, outpathname: str):
+def generate_match(ctx: click.Context, pathname: str):
     identities = os.listdir(pathname)
 
     genuine_scores = {}
