@@ -21,7 +21,7 @@ def similarity(emb0, emb1):
 @click.command()
 @click.pass_context
 @click.option('--path', 'pathname', required=True)
-def generate_match(pathname: str):
+def generate_match(ctx: click.Context, pathname: str):
     with open('/home/trieber/data_cleaning/test.json', 'w') as outfile:
         json.dump({"test": 0}, outfile)
 
@@ -43,6 +43,7 @@ def generate_match(pathname: str):
     score_sorted = {k: v for k, v in sorted(image_genuine_scores.items(), key=lambda item: item[1])}
     with open('/home/trieber/data_cleaning/genuine_image_scores.json', 'w') as outfile:
         json.dump(score_sorted, outfile)
+
 
 if __name__ == "__main__":
     generate_match()
