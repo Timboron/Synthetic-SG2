@@ -1,6 +1,6 @@
 from os import listdir
-path = "/home/trieber/Synthetic-SG2/generated/sg2_cond_idnet_resume"
-with open("../image_path_list.txt", "w") as file:
+path = "/data/trieber/syn_datasets/sg2_cond"
+with open("/data/trieber/syn_datasets/image_path_list.txt", "w") as file:
     for i in range(0, 10572):
         images = [f for f in listdir(path + "/" + str(i))]  # "{:0>6d}".format(i))]
         for image in images:
