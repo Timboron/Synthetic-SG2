@@ -28,7 +28,9 @@ def generate_match(ctx: click.Context, pathname: str, datapathname: str, cleanin
         data = json.load(outfile)
     rate = float(cleaningrate)
     del_amount = round(len(data) * rate)
+    print(del_amount)
     del_image_paths = data.keys()[:del_amount]
+    print(len(del_image_paths))
     for image_path in del_image_paths:
         os.remove(os.path.join(datapathname, image_path + ".png"))
 
