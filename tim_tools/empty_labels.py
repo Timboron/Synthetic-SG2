@@ -14,6 +14,8 @@ def generate_match(ctx: click.Context, pathname: str):
         images = os.listdir(os.path.join(pathname, identity))
         if len(images) == 0:
             empty_labels.append(identity)
+        if len(images) < 200:
+            print(len(images))
 
     print(empty_labels)
 
