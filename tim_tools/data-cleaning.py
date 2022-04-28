@@ -35,7 +35,7 @@ def generate_match(ctx: click.Context, pathname: str, expname: str):
             print("rip")
             continue
         names = [y[:-4] for y in os.listdir(id_path) if ".npy" in y]
-        features = [np.load(id_path + "/" + x) for x in names]
+        features = [np.load(os.path.join(id_path, x + ".npy")) for x in names]
 
         for name, feature in zip(names, features):
             references = np.vstack(([feature] * len(features)))
