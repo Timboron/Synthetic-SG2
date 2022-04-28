@@ -27,6 +27,7 @@ def generate_match(ctx: click.Context, pathname: str, expname: str):
         json.dump({"test": 0}, outfile)
 
     identities = os.listdir(pathname)
+    print(identities)
     image_genuine_scores = {}
 
     for identity in tqdm(identities):
