@@ -33,8 +33,8 @@ def generate_match(ctx: click.Context, pathname: str, expname: str):
         id_path = pathname + "/" + identity
         if not os.path.exists(id_path):
             continue
-        features = [np.load(x) for x in [id_path + "/" + y for y in os.listdir(id_path) if ".npy" in y]]
         names = [y[:-4] for y in os.listdir(id_path) if ".npy" in y]
+        features = [np.load(id_path + "/" + x) for x in names]
 
         for name, feature in zip(names, features):
             references = np.vstack(([feature] * len(features)))
