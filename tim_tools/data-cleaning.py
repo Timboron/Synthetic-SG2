@@ -21,7 +21,8 @@ def similarity(emb0, emb1):
 @click.command()
 @click.pass_context
 @click.option('--path', 'pathname', required=True)
-def generate_match(ctx: click.Context, pathname: str):
+@click.option('--expname', 'expname', required=True)
+def generate_match(ctx: click.Context, pathname: str, expname: str):
     with open('/home/trieber/data_cleaning/test.json', 'w') as outfile:
         json.dump({"test": 0}, outfile)
 
@@ -33,15 +34,16 @@ def generate_match(ctx: click.Context, pathname: str):
         if not os.path.exists(id_path):
             continue
         features = [np.load(x) for x in [id_path + "/" + y for y in os.listdir(id_path) if ".npy" in y]]
+        names = [y[:-4] for y in os.listdir(id_path) if ".npy" in y]
 
-        for feature_idx, feature in enumerate(features):
+        for name, feature in zip(names, features):
             references = np.vstack(([feature] * len(features)))
             probes = np.vstack(features)
             gen_score = similarity(references, probes)
-            image_genuine_scores[str(identity) + "/" + str(feature_idx)] = sum(gen_score) / len(gen_score)
+            image_genuine_scores[str(identity) + "/" + name] = sum(gen_score) / len(gen_score)
 
     score_sorted = {k: v for k, v in sorted(image_genuine_scores.items(), key=lambda item: item[1])}
-    with open('/home/trieber/data_cleaning/genuine_image_scores.json', 'w') as outfile:
+    with open('/home/trieber/data_cleaning/genuine_image_scores' + expname + '.json', 'w') as outfile:
         json.dump(score_sorted, outfile)
 
 
