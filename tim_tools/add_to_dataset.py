@@ -15,7 +15,7 @@ def generate_match(ctx: click.Context, inpath: str, outpath: str, before: int, a
 
     for identity in tqdm(identities):
         id_path = os.path.join(inpath, identity)
-        if not os.path.exists(outpath, identity):
+        if not os.path.exists(os.path.join(outpath, identity)):
             os.makedirs(id_path)
         images = os.listdir(id_path)
         for idx, image in enumerate(images):
