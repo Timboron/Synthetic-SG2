@@ -14,13 +14,10 @@ def generate_match(ctx: click.Context, inpath: str, outpath: str, before: int, a
     identities = os.listdir(inpath)
     print(identities)
     for identity in tqdm(identities):
-        id_path = os.path.join(inpath, identity)
-        images = os.listdir(id_path)
+        images = os.listdir(os.path.join(inpath, identity))
         for idx, image in enumerate(images):
-            if identity == "000000":
-                print("in:", os.path.join(id_path, image), "    out:", os.path.join(outpath, identity, image))
             if int(before) < idx <= int(after):
-                shutil.copyfile(os.path.join(id_path, image), os.path.join(outpath, identity, image))
+                shutil.copyfile(os.path.join(inpath, identity, image), os.path.join(outpath, identity, image))
 
 
 if __name__ == "__main__":
