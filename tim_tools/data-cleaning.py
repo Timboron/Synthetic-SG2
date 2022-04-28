@@ -43,7 +43,7 @@ def generate_match(ctx: click.Context, pathname: str, expname: str):
             image_genuine_scores[str(identity) + "/" + name] = sum(gen_score) / len(gen_score)
 
     score_sorted = {k: v for k, v in sorted(image_genuine_scores.items(), key=lambda item: item[1])}
-    with open('/home/trieber/data_cleaning/genuine_image_scores' + expname + '.json', 'w') as outfile:
+    with open('/data/trieber/data_cleaning_scores/' + expname + '.json', 'w') as outfile:
         json.dump(score_sorted, outfile)
 
 
