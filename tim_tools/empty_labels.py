@@ -17,7 +17,7 @@ def generate_match(ctx: click.Context, pathname: str):
         if len(images) < 200:
             print(len(images))
 
-    print(empty_labels)
+    print(len(empty_labels))
 
 
 if __name__ == "__main__":
