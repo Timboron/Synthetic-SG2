@@ -27,12 +27,12 @@ def generate_match(ctx: click.Context, pathname: str, expname: str):
         json.dump({"test": 0}, outfile)
 
     identities = os.listdir(pathname)
-    print(identities)
     image_genuine_scores = {}
 
     for identity in tqdm(identities):
-        id_path = pathname + "/" + identity
+        id_path = os.path.join(pathname, identity)
         if not os.path.exists(id_path):
+            print("rip")
             continue
         names = [y[:-4] for y in os.listdir(id_path) if ".npy" in y]
         features = [np.load(id_path + "/" + x) for x in names]
