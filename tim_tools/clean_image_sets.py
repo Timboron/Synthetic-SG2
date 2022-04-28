@@ -31,7 +31,6 @@ def generate_match(ctx: click.Context, pathname: str, datapathname: str, cleanin
     print(del_amount)
     del_image_paths = list(data.keys())[:del_amount]
     print(len(del_image_paths))
-    return
     for image_path in del_image_paths:
         os.remove(os.path.join(datapathname, image_path + ".png"))
 
