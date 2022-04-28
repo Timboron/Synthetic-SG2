@@ -12,7 +12,7 @@ import click
 @click.option('--after', 'after', required=True)
 def generate_match(ctx: click.Context, inpath: str, outpath: str, before: int, after: int):
     identities = os.listdir(inpath)
-
+    print(identities)
     for identity in tqdm(identities):
         id_path = os.path.join(inpath, identity)
         images = os.listdir(id_path)
