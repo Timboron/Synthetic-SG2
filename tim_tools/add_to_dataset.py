@@ -16,7 +16,6 @@ def generate_match(ctx: click.Context, inpath: str, outpath: str, before: int, a
         images = os.listdir(os.path.join(inpath, identity))
         for idx, image in enumerate(images):
             if int(before) < idx <= int(after):
-                print(identity, idx)
                 shutil.copyfile(os.path.join(inpath, identity, image), os.path.join(outpath, identity, image))
 
 
