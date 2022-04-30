@@ -13,6 +13,7 @@ import click
 def generate_match(ctx: click.Context, inpath: str, outpath: str, before: int, after: int):
     identities = os.listdir(inpath)
     for identity in tqdm(identities):
+        os.makedirs(os.path.join(outpath, identity), exist_ok=True)
         images = os.listdir(os.path.join(inpath, identity))
         for idx, image in enumerate(images):
             if int(before) < idx <= int(after):
