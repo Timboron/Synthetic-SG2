@@ -14,6 +14,7 @@ from typing import List, Optional
 
 import click
 from tqdm import tqdm
+import random
 import dnnlib
 import numpy as np
 import PIL.Image
@@ -38,14 +39,14 @@ def num_range(s: str) -> List[int]:
 @click.command()
 @click.pass_context
 @click.option('--network', 'network_pkl', help='Network pickle filename', required=True)
-@click.option('--seeds', type=num_range, help='List of random seeds')
+@click.option('--count', 'count', help='amount of images', required=True)
 @click.option('--trunc', 'truncation_psi', type=float, help='Truncation psi', default=1, show_default=True)
 @click.option('--noise-mode', help='Noise mode', type=click.Choice(['const', 'random', 'none']), default='const', show_default=True)
 @click.option('--outdir', help='Where to save te output images', type=str, required=True, metavar='DIR')
 def generate_images(
     ctx: click.Context,
+    count: int,
     network_pkl: str,
-    seeds: Optional[List[int]],
     truncation_psi: float,
     noise_mode: str,
     outdir: str,
@@ -67,7 +68,7 @@ def generate_images(
         label[:, class_idx] = 1
 
         os.makedirs(outdir+"/"+f'{class_idx:06d}', exist_ok=True)
-
+        seeds = random.sample(range(1, 1001), count)
         # Generate images.
         for seed_idx, seed in enumerate(seeds):
             z = torch.from_numpy(np.random.RandomState(seed).randn(1, G.z_dim)).to(device)
