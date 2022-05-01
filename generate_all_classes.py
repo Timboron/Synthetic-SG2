@@ -65,7 +65,7 @@ def generate_images(
         label[:, class_idx] = 1
 
         os.makedirs(outdir+"/"+f'{class_idx:06d}', exist_ok=True)
-        seeds = random.sample(range(1, 1001), count)
+        seeds = random.sample(range(1, 1001), int(count))
         # Generate images.
         for seed_idx, seed in enumerate(seeds):
             z = torch.from_numpy(np.random.RandomState(seed).randn(1, G.z_dim)).to(device)
