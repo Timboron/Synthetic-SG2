@@ -59,9 +59,6 @@ def generate_images(
 
     os.makedirs(outdir, exist_ok=True)
 
-    if seeds is None:
-        seeds = list(range(200))
-
     for class_idx in tqdm(range(0, G.c_dim)):
         # Labels.
         label = torch.zeros([1, G.c_dim], device=device)
