@@ -23,8 +23,6 @@ def similarity(emb0, emb1):
 @click.option('--path', 'pathname', required=True)
 @click.option('--expname', 'expname', required=True)
 def generate_match(ctx: click.Context, pathname: str, expname: str):
-    with open('/home/trieber/data_cleaning/test.json', 'w') as outfile:
-        json.dump({"test": 0}, outfile)
 
     identities = os.listdir(pathname)
     image_genuine_scores = {}
