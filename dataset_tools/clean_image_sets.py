@@ -5,18 +5,6 @@ import os
 
 import click
 
-def similarity(emb0, emb1):
-    if emb0.ndim < 2 or emb1.ndim < 2:
-        print("ERROR")
-        print(emb0, emb1)
-        return []
-    assert (emb0.shape[0] == emb1.shape[0])
-    assert (emb0.shape[1] == emb1.shape[1])
-    dot = np.sum(np.multiply(emb0, emb1), axis=1)
-    norm = np.linalg.norm(emb0, axis=1) * np.linalg.norm(emb1, axis=1)
-    sim = np.clip(dot / norm, -1., 1.)
-    return sim
-
 
 @click.command()
 @click.pass_context
@@ -24,6 +12,7 @@ def similarity(emb0, emb1):
 @click.option('--datapath', 'datapathname', required=True)
 @click.option('--rate', 'cleaningrate', required=True)
 def generate_match(ctx: click.Context, pathname: str, datapathname: str, cleaningrate: str):
+    # delete images
     with open(pathname) as outfile:
         data = json.load(outfile)
     rate = float(cleaningrate)
@@ -33,6 +22,23 @@ def generate_match(ctx: click.Context, pathname: str, datapathname: str, cleanin
     print(len(del_image_paths))
     for image_path in del_image_paths:
         os.remove(os.path.join(datapathname, image_path + ".png"))
+
+    # delete empty folders
+    identities = os.listdir(pathname)
+    empty_labels = []
+    one_labels = []
+
+    for identity in identities:
+        images = os.listdir(os.path.join(pathname, identity))
+        if len(images) == 0:
+            empty_labels.append(identity)
+        if len(images) == 1:
+            one_labels.append(identity)
+        if len(images) < 200:
+            print(len(images))
+
+    print("empty:", len(empty_labels))
+    print("one:", len(one_labels))
 
 if __name__ == "__main__":
     generate_match()
