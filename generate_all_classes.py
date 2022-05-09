@@ -41,7 +41,7 @@ def num_range(s: str) -> List[int]:
 @click.option('--network', 'network_pkl', help='Network pickle filename', required=True)
 @click.option('--count', 'count', help='amount of images', required=True)
 @click.option('--trunc', 'truncation_psi', type=float, help='Truncation psi', default=1, show_default=True)
-@click.option('--noise-mode', help='Noise mode', type=click.Choice(['const', 'random', 'none']), default='const', show_default=True)
+@click.option('--noise-mode', help='Noise mode', type=click.Choice(['const', 'random', 'none']), default='random', show_default=True)
 @click.option('--outdir', help='Where to save te output images', type=str, required=True, metavar='DIR')
 def generate_images(
     ctx: click.Context,
