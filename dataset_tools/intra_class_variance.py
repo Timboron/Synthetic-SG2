@@ -23,8 +23,5 @@ def generate_match(ctx: click.Context, pathname: str):
     print(sum(variances)/len(variances))
 
 
-
-
-
 if __name__ == "__main__":
     generate_match()
